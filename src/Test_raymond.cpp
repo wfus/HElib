@@ -30,6 +30,28 @@ std::vector<long> read_image(std::string fname) {
 }
 
 
+/* Test function that lays out a 16x16 images into the 2x2 squares needed
+ * to add them and average to get a 8x8 image result. The 16x16 image is laid
+ * out in a 1D matrix, with rows, then going down with columns 
+ */
+void split_image16(std::vector<long> &original, 
+                   std::vector<long> &r1,
+                   std::vector<long> &r2,
+                   std::vector<long> &r3,
+                   std::vector<long> &r4) {
+    int i, j;
+    for (i = 0; i < 8; i++) {
+        for (j = 0; j < 8; j++) {
+            r1.push_back(original[2*i*16 + 2*j]);
+            r2.push_back(original[2*i*16 + 2*j+1]);
+            r3.push_back(original[(2*i+1)*16 + 2*j]);
+            r4.push_back(original[(2*i+1)*16 + 2*j+1]);
+        } 
+    }
+}
+
+
+
 int main(int argc, char **argv)
 {
     
@@ -38,6 +60,14 @@ int main(int argc, char **argv)
     for (int i = 0; i < image.size(); i++) {
         std::cout << image[i] << " ";
     }
+    std::cout << std::endl << std::endl << "EHH" << std::endl;
+
+    std::vector<long> r1, r2, r3, r4; 
+    split_image16(image, r1, r2, r3, r4);
+    for (int i = 0; i < r1.size(); i++) {
+        std::cout << r1[i] << " ";
+    }
+
 
 
     /* On our trusted system we generate a new key
