@@ -1,0 +1,5 @@
+#!/bin/sh
+
+make test
+time ./Test_raymond_x
+

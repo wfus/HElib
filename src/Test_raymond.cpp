@@ -11,6 +11,15 @@ NTL_CLIENT
 #include <iostream>
 #include <vector>
 
+
+
+/* We have to encode floats into our plaintext space for our scheme to work,
+ * so we will work with 1 = 0.01, and a large prime. 
+ */
+const long PRIME_MOD = 982451653;          // everything will be modulo this
+const long SCALE_FACTOR = 100;           // factor to represent floats as longs
+const long INVERSE_FOUR = 736838740;
+
 std::vector<long> read_image(std::string fname) {
     float w, h;
     std::vector<long> im;
@@ -50,12 +59,18 @@ void split_image16(std::vector<long> &original,
     }
 }
 
+void write_image_to_file(long w, long h, std::vector<long> im, std::string fname) {
+    std::ofstream myfile;
+    myfile.open(fname.c_str());
+    myfile << w << "\n" << h << "\n";
+    for (int i = 0; i < im.size() && i < w * h; i++) {
+        myfile << im[i] / SCALE_FACTOR  << "\n";
+    }
+    myfile.close();
+    return;
+}
 
-/* We have to encode floats into our plaintext space for our scheme to work,
- * so we will work with 1 = 0.01, and a large prime. 
- */
-const long PRIME_MOD = 982451653;          // everything will be modulo this
-const long SCALE_FACTOR = 100;           // factor to represent floats as longs
+
 
 int main(int argc, char **argv)
 {
@@ -64,17 +79,17 @@ int main(int argc, char **argv)
     std::vector<long> image = read_image("/home/robocup/crypto/raymond/image/kung.txt");
     // Need to multiply plaintext by scaling factor to convert to float
     for (int i = 0; i < image.size(); i++) { image[i] *= SCALE_FACTOR;}
-    //for (int i = 0; i < image.size(); i++) {
-    //    std::cout << image[i] << " ";
-    //}
+    
+    std::cout << "Original Image" << std::endl;
+    for (int i = 0; i < image.size(); i++) {
+        std::cout << image[i] << " ";
+        if (i % 16 == 15) std::cout << std::endl;
+    }
     std::cout << std::endl << std::endl << "EHH" << std::endl;
 
     std::vector<long> r1, r2, r3, r4; 
     split_image16(image, r1, r2, r3, r4);
     
-    //for (int i = 0; i < r1.size(); i++) {
-    //    std::cout << r1[i] << " ";
-    //}
 
 
         /* On our trusted system we generate a new key
@@ -121,7 +136,7 @@ int main(int argc, char **argv)
 
     std::vector<long> encrypted_four;
     for (int i = 0; i < nslots; i++) {
-        encrypted_four.push_back(SCALE_FACTOR * 1/4);
+        encrypted_four.push_back(INVERSE_FOUR);
     }
     r1.resize(nslots, 0);
     r2.resize(nslots, 0);
@@ -151,15 +166,17 @@ int main(int argc, char **argv)
     ct_average *= ctfour;
     // To divide by 4 we will XOR out to make everything (mod 4), and then find 
     // the (4)^{-1} of the prime we are working with, and multiply by that...
-    Ctxt ct_testdiv = ct_average;
-    //ct_testdiv.divideBy2();
 
     std::vector<long> res;
     ea.decrypt(ct_average, secretKey, res);
+
 
     for (int i = 0; i < res.size() && i < 64; i++) {
         std::cout << res[i] << " ";
         if (i % 8 == 7) std::cout << std::endl;
     }
+
+    write_image_to_file(8, 8, res, "/home/robocup/crypto/raymond/image/newkung.txt");
+
     return 0;
 }
